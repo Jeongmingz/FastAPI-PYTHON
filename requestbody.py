@@ -1,5 +1,10 @@
-# queryparameter.py
+# requestbody.py
 from fastapi import FastAPI
+from pydantic import BaseModel
+
+# Optional : Optional 을 선언한 변수는 None값이 들어올 수 있다. 즉, 선택가능하다.
+from typing import Optional
+
 
 app = FastAPI()
 
@@ -18,13 +23,13 @@ async def items_main_page():
 async def items_list():
 	return {"items_list": fake_items_db}
 
+
 @app.get('/items/detail_list')
 async def item_detail_list(find: str = 'all'):
 	if find == 'all':
 		return fake_items_detail_list
 	else:
 		return [item for item in fake_items_detail_list if item['item_sort'] == find]
-
 
 
 @app.get('/items/{item_id}')
@@ -35,7 +40,20 @@ async def item_detail(item_id: int):
 		return {"massage": "존재하지 않는 item_id 입니다."}
 
 
+class Item(BaseModel):
+	item_id: int
+	item_name: str
+	item_price: int
+	item_sort: Optional[str] = "Object"
 
+
+@app.post('/items')
+async def create_item(item: Item):
+	item_dict = item.dict()
+	# Dictionary.update() => 해당 Dictionary에 값을 수정, 추가하는 function이다.
+	item_dict.update({"item_sort": item.item_name.split('_')[-1]})
+
+	return item_dict
 
 fake_items_db = [{"item_id": 0}, {"item_id": 1}, {"item_id": 2}]
 
